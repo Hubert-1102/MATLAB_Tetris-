@@ -1,15 +1,20 @@
 global interface plane max_row max_column
 interface=figure;
-global shape color_number start grade pause_time last_speed auto
+global shape color_number start grade pause_time last_speed auto tips
 grade=0;
 auto=0;
-str={'a：开始游戏';'m：自动寻路';'x：加速';'c：减速';'p：暂停'};
-selection = questdlg(str, ...
-    'start', ...
-    'Confirm','Confirm'); 
-        switch selection 
-            case 'Confirm'
-        end
+
+help = uimenu('Text','Help');
+restart = uimenu(help,'Text','restart');
+keyboard = uimenu(help,'Text','Keyboard');
+keyboard.MenuSelectedFcn = @keyboardSelected;
+keyboard.Accelerator = 'T';
+restart.MenuSelectedFcn = @restartGame;
+restart.Accelerator = 'Z';
+
+uicontrol(interface,'Units','pixels','Position',[10,485,100,30],'Style','text','String','Score:');
+tips = uicontrol(interface,'Units','pixels','Position',[80,485,100,30],'Style','edit','String','Score');
+
 global type1_1 type1_2 type1_3 type1_4 type2_1 type2_2 type3_1 type3_2 type4_1 type5_1 type5_2 type6_1 type6_2
 global type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 game_over pause1 f
 game_over=0;
@@ -44,7 +49,7 @@ type4_1(1,1)=1;
 type4_1(1,2)=1;
 type4_1(2,1)=1;
 type5_1=type;
-type5_1(3,1)=1;
+type5_1(3,3)=1;
 % 1
 % 1
 % 1 1
@@ -104,11 +109,12 @@ col=10;
 	'CurrentObject',imagesc(plane)...
     ,	'KeyPressFcn',@direction ...
     );
+    set(tips,'String','0');
 %         'CloseRequestFcn',@exit,...
 	axis off
 start=0;
     f=0;
-try
+% try
 while game_over==0
 if(start==1&&pause1==0)
 
@@ -135,8 +141,8 @@ else
 end
 
 end
-catch
-end
+% catch
+% end
 
 
 
@@ -144,7 +150,7 @@ end
 
 function random_shape
 global shape type1_1 type2_1 type3_1 type4_1 plane  max_row  interface color_number grade
-global type5_1 type6_1 type7_1
+global type5_1 type6_1 type7_1 tips
 is_full=1;
 count=1;
 while is_full==1
@@ -160,6 +166,9 @@ for i = 1 : max_row
     end
 
 end
+
+set(tips,'String',num2str(grade));
+
 if(is_full==1)
 r=plane(1,:);
 for j = 2:c
@@ -168,6 +177,7 @@ for j = 2:c
     r=r1;
 end
 set(interface,'CurrentObject',imagesc(plane));
+
         axis off
 end
 
@@ -194,6 +204,8 @@ end
         else
             shape=type7_1;
         end
+
+% set(tips,'String',num2str(grade));
 end
 
 
@@ -596,7 +608,7 @@ end
 
 
 function  is_reach
-global plane shape row  col max_row max_column grade game_over f
+global plane shape row  col max_row max_column grade game_over f start
 flag=0;
 for i =1:3
     if(flag==1)
@@ -605,8 +617,9 @@ for i =1:3
     for j =1:3
     if(shape(i,j)==1&&row+i-2+1<=max_row&&col+j-2<=max_column&&col+j-2>=1&&plane(row+i-2+1,col+j-2)>0&&(i>2||i<=2&&shape(i+1,j)==0))
     if(row<=3)
-            game_over=1;            
-            delete(gcf)
+%             game_over=1;   
+    start = 0;
+%             delete(gcf)
 str1='You got ';
 g=num2str(grade);
 
@@ -618,7 +631,7 @@ selection = questdlg(str, ...
         switch selection 
             case 'Confirm'
         end
-        clear all;
+%         clear all;
     end
         row=2;
         col=7;
@@ -818,7 +831,7 @@ global type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 plane color_number
             end
        elseif(isequal(shape,type5_1)||isequal(shape,type5_2)||isequal(shape,type5_3)||isequal(shape,type5_4))
             if(min_type5==flat_two_p&&min_type5~=100)
-                move(flat_two,t,type5_1)
+                move(flat_two-1,t,type5_1)
             elseif(min_type5==high_two_left_p&&min_type5~=100)
                 move(high_two_left,t,type5_3)
             elseif(min_type5==flat_p&&min_type5~=100)
@@ -883,4 +896,20 @@ shape=type;
             axis off
     end
 end
-    end
+ end
+
+ function keyboardSelected(src,event)
+str={'a：开始游戏';'m：自动寻路(AI)';'x：加速';'c：减速';'p：暂停'};
+selection = questdlg(str, ...
+'hint', 'Confirm', 'Confirm'); 
+switch selection 
+case 'Confirm'
+end
+ end
+
+function restartGame(src,event)
+global max_row max_column plane grade start
+plane = zeros(max_row,max_column);
+grade = 0;
+start = 1;
+end
