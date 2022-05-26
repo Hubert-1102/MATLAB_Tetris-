@@ -1,25 +1,36 @@
+clear all; clc; close all;
+
 global interface plane max_row max_column
 interface=figure;
-global shape color_number start grade pause_time last_speed auto tips
+global shape color_number start grade pause_time last_speed auto tips modeTips
 grade=0;
 auto=0;
 
 help = uimenu('Text','Help');
-restart = uimenu(help,'Text','restart');
+restart = uimenu(help,'Text','start');
 keyboard = uimenu(help,'Text','Keyboard');
 keyboard.MenuSelectedFcn = @keyboardSelected;
 keyboard.Accelerator = 'T';
 restart.MenuSelectedFcn = @restartGame;
 restart.Accelerator = 'Z';
 
+heroTips = uimenu(help,'Text','Hero Ranklist');
+heroTips.MenuSelectedFcn = @searchHero;
+heroTips.Accelerator = 'A';
+
 uicontrol(interface,'Units','pixels','Position',[10,485,100,30],'Style','text','String','Score:');
-tips = uicontrol(interface,'Units','pixels','Position',[80,485,100,30],'Style','edit','String','Score');
+tips = uicontrol(interface,'Units','pixels','Position',[80,485,100,30],'Style','text','String','Score');
+
+uicontrol(interface,'Units','pixels','Position',[150,485,100,30],'Style','text','String','Mode:');
+modeTips = uicontrol(interface,'Units','pixels','Position',[220,485,100,30],'Style','text','String','Human');
 
 global type1_1 type1_2 type1_3 type1_4 type2_1 type2_2 type3_1 type3_2 type4_1 type5_1 type5_2 type6_1 type6_2
 global type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 game_over pause1 f
 game_over=0;
 type=zeros(3,3);
 type(2,2)=1;
+
+% 丁四
 type1_1=type;
 type1_1(2,:)=1;
 type1_1(3,2)=1;
@@ -30,11 +41,13 @@ type1_3(:,1)=1;
 type1_4=type;
 type1_4(3,:)=1;
 
+% 长条
 type2_1=type;
 type2_1(:,2)=1;
 type2_2=type;
 type2_2(2,:)=1;%长条
 
+% Z型
 type3_1=type;
 type3_1(2,1)=1;
 type3_1(3,2)=1;
@@ -44,15 +57,17 @@ type3_2(1,3)=1;
 type3_2(2,3)=1;
 type3_2(3,2)=1;
 
+% 正方形
 type4_1=type;
 type4_1(1,1)=1;
 type4_1(1,2)=1;
 type4_1(2,1)=1;
 type5_1=type;
 type5_1(3,3)=1;
+
 % 1
 % 1
-% 1 1
+% 1 1   L型
 type5_1(:,2)=1;
 type5_2=type;
 type5_2(2,:)=1;
@@ -65,7 +80,7 @@ type5_4(2,:)=1;
 type5_4(1,3)=1;
 
 
-
+% 反L型
 type6_1=type;
 type6_1(3,1)=1;
 type6_1(:,2)=1;
@@ -82,6 +97,7 @@ type6_4=type;
 type6_4(2,:)=1;
 type6_4(1,1)=1;
 
+% 反Z型
 type7_1=type;
 type7_1(2,3)=1;
 type7_1(3,1)=1;
@@ -110,11 +126,14 @@ col=10;
     ,	'KeyPressFcn',@direction ...
     );
     set(tips,'String','0');
+    set(modeTips,'String','Human');
 %         'CloseRequestFcn',@exit,...
 	axis off
 start=0;
     f=0;
 % try
+
+% main running part!
 while game_over==0
 if(start==1&&pause1==0)
 
@@ -122,10 +141,12 @@ if(start==1&&pause1==0)
     if(game_over==0)
     is_reach()
     down()
+    % f判断是否自动寻路
     if(f==1&&auto==1&&game_over==0)
     ai1();
     f=0;
     end
+    % 判断该方块是否达到边界
     if(shape(3,1)==0&&shape(3,2)==0&&shape(3,3)==0&&row>=max_row|| ...
             (shape(3,1)~=0||shape(3,2)~=0||shape(3,3)~=0)&&row>=max_row-1)
         row=2;
@@ -147,12 +168,14 @@ end
 
 
 
-
+% 
 function random_shape
 global shape type1_1 type2_1 type3_1 type4_1 plane  max_row  interface color_number grade
 global type5_1 type6_1 type7_1 tips
 is_full=1;
 count=1;
+
+% 判断每一行是否已满，消除功能
 while is_full==1
     is_full=0;
     c=0;
@@ -164,11 +187,9 @@ for i = 1 : max_row
         c=i;
         break
     end
-
 end
-
 set(tips,'String',num2str(grade));
-
+% 将上一行的数据移到下一行
 if(is_full==1)
 r=plane(1,:);
 for j = 2:c
@@ -177,16 +198,14 @@ for j = 2:c
     r=r1;
 end
 set(interface,'CurrentObject',imagesc(plane));
-
         axis off
 end
-
 end
 color_number=color_number-20;
 if(color_number<=0)
 color_number=100;
 end
-
+% 随机生成下一个方块
             random=rand()*8;
 %             random=0;
         if(random<=1)
@@ -204,13 +223,12 @@ end
         else
             shape=type7_1;
         end
-
 % set(tips,'String',num2str(grade));
 end
 
 
 
-
+% 下降
 function down
 global row col  shape interface plane max_row color_number max_column start
 if(start==1)
@@ -238,19 +256,23 @@ end
 
 
 
-
+% 根据按键判断执行什么操作
 function direction(~,event)
     key=event.Key;
     global auto f
     global  col  row max_row max_column  plane interface shape type1_1 type1_2 type1_4 type1_3
     global type2_1 type2_2 type3_1 type3_2 color_number start  pause_time last_speed type5_1 type5_2
     global type6_1 type6_2 type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 type4_1 pause1 
+    global modeTips
     switch key
+        % 开/关 人机
         case'space'
             if(auto==0)
-            auto=1;
+                auto=1;
+                set(modeTips,'String','AI');
             else
                 auto=0;
+                set(modeTips,'String','Human');
             end
         case 'p'
             if(pause1==0)
@@ -269,7 +291,9 @@ function direction(~,event)
             pause_time=pause_time*1.5;
             last_speed=pause_time;
         case 'uparrow'
-            if(row<max_row&&col>1&&col<max_column)
+            if(row < max_row && col > 1 && col < max_column)
+
+         % 消除当前形状
          for i3 =1:3 
             for j3 = 1:3
                 if(shape(i3,j3)==1&&col+j3-2>0&&col+j3-2<=max_column)
@@ -278,7 +302,7 @@ function direction(~,event)
             end
         end            
 
-
+        % 更改当前形状
                 if(shape==type1_4)
                     shape=type1_1;
                 elseif(shape==type1_1)
@@ -316,6 +340,8 @@ function direction(~,event)
                 elseif(shape==type7_2)
                     shape=type7_1;
                 end
+
+        % 显示当前形状
         for i3 =1:3 
             for j3 = 1:3
                 if(shape(i3,j3)==1&&col+j3-2>0&&col+j3-2<=max_column)
@@ -358,7 +384,7 @@ end
         end
     end
 
-
+% 将该方块移动number个col
 function shift(number,type)
     flag1=0;
     for i2 = 1:3
@@ -594,7 +620,24 @@ end
 
     end
     function move(c,t,type)
+                count=0;
                 while(col~=c)
+                    count=count+1;
+                    if(count>=20)
+                        str1='You got ';
+                        g=num2str(grade);
+                        start=0;
+                        str2=' points';
+                        str=[str1 g str2];
+                        selection = questdlg(str, ...
+                        'Game over', ...
+                            'Confirm','Confirm'); 
+                        switch selection 
+                         case 'Confirm'
+                            
+                        end
+                        break
+                    end
                     pause(t)
                     if(col<c)
                         shift(1,type)
@@ -616,6 +659,8 @@ for i =1:3
     end
     for j =1:3
     if(shape(i,j)==1&&row+i-2+1<=max_row&&col+j-2<=max_column&&col+j-2>=1&&plane(row+i-2+1,col+j-2)>0&&(i>2||i<=2&&shape(i+1,j)==0))
+    
+    % 游戏结束
     if(row<=3)
 %             game_over=1;   
     start = 0;
@@ -632,6 +677,12 @@ selection = questdlg(str, ...
             case 'Confirm'
         end
 %         clear all;
+        
+        % input your name
+        name = inputdlg("Please input your name");
+        heroFile = fopen("hero.txt","a+");
+        fprintf(heroFile,"%s: %.0f\r\n",name{1},grade);
+        fclose(heroFile);
     end
         row=2;
         col=7;
@@ -653,7 +704,7 @@ end
  function ai1
  global type1_1 type1_2 type1_3 type1_4 type2_1 type2_2 type3_1 type3_2 type4_1 type5_1 type5_2 type6_1 type6_2
 global type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 plane color_number
- global row max_column max_row col shape interface grade start
+ global row max_column max_row col shape interface
         flat=0;%平地
         left_high=0;%左边高一格
         right_high=0;%右边高一格
@@ -851,24 +902,7 @@ global type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 plane color_number
             end
        end
     function move(c,t,type)
-        count=0;
                 while(col~=c)
-                    count=count+1;
-                    if(count>=20)
-                        str1='You got ';
-                        g=num2str(grade);
-                        start=0;
-                        str2=' points';
-                        str=[str1 g str2];
-                        selection = questdlg(str, ...
-                        'Game over', ...
-                            'Confirm','Confirm'); 
-                        switch selection 
-                         case 'Confirm'
-                            
-                        end
-                        break
-                    end
                     pause(t)
                     if(col<c)
                         shift(1,type)
@@ -877,6 +911,8 @@ global type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 plane color_number
                     end
                 end
     end
+
+        % 向左/右移动
        function shift(number,type)
     flag1=0;
     for i2 = 1:3
@@ -916,7 +952,7 @@ end
  end
 
  function keyboardSelected(src,event)
-str={'a：开始游戏';'m：自动寻路(AI)';'x：加速';'c：减速';'p：暂停';'space: 启动AI模式'};
+str={'A: 开始游戏';'M: 自动寻路(一次提示)';'X: 加速';'C: 减速';'P: 暂停/继续';'space: 进入/退出人机模式'};
 selection = questdlg(str, ...
 'hint', 'Confirm', 'Confirm'); 
 switch selection 
@@ -930,3 +966,29 @@ plane = zeros(max_row,max_column);
 grade = 0;
 start = 1;
 end
+
+function searchHero(src,event)
+heroFile = fopen("hero.txt");
+str = "";
+while ~feof(heroFile)
+    str = [str; fgetl(heroFile)];
+end
+fclose(heroFile);
+heroRank = questdlg(str, ...
+'HeroRankList', 'Confirm', 'Confirm'); 
+switch heroRank
+case 'Confirm'
+end
+end
+
+
+
+
+
+
+
+
+
+
+
+
