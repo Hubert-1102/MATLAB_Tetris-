@@ -653,7 +653,7 @@ end
  function ai1
  global type1_1 type1_2 type1_3 type1_4 type2_1 type2_2 type3_1 type3_2 type4_1 type5_1 type5_2 type6_1 type6_2
 global type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 plane color_number
- global row max_column max_row col shape interface
+ global row max_column max_row col shape interface grade start
         flat=0;%平地
         left_high=0;%左边高一格
         right_high=0;%右边高一格
@@ -851,7 +851,24 @@ global type7_1 type7_2 type5_3 type5_4 type6_3 type6_4 plane color_number
             end
        end
     function move(c,t,type)
+        count=0;
                 while(col~=c)
+                    count=count+1;
+                    if(count>=20)
+                        str1='You got ';
+                        g=num2str(grade);
+                        start=0;
+                        str2=' points';
+                        str=[str1 g str2];
+                        selection = questdlg(str, ...
+                        'Game over', ...
+                            'Confirm','Confirm'); 
+                        switch selection 
+                         case 'Confirm'
+                            
+                        end
+                        break
+                    end
                     pause(t)
                     if(col<c)
                         shift(1,type)
@@ -899,7 +916,7 @@ end
  end
 
  function keyboardSelected(src,event)
-str={'a：开始游戏';'m：自动寻路(AI)';'x：加速';'c：减速';'p：暂停'};
+str={'a：开始游戏';'m：自动寻路(AI)';'x：加速';'c：减速';'p：暂停';'space: 启动AI模式'};
 selection = questdlg(str, ...
 'hint', 'Confirm', 'Confirm'); 
 switch selection 
